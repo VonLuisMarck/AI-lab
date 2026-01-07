@@ -23,7 +23,7 @@ services:
       - JWT_SECRET_KEY=change-this-in-production
     volumes:
       - ./frontend:/app/frontend:ro
-      - ./data:/app/data:ro
+      - ./data:/app/data:ro        # ← data se monta en /app/data
     ports:
       - "8080:8080"
     depends_on:
@@ -31,3 +31,4 @@ services:
 
 volumes:
   ollama_data:
+

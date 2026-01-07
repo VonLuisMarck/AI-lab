@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ai-lab-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=5m
+
+  lab-backend:
+    build: ./backend
+    container_name: ai-lab-backend
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=llama3
+      - LAB_ID=demo-lab-01
+      - JWT_SECRET_KEY=change-this-in-production
+    volumes:
+      - ./frontend:/app/frontend:ro
+      - ./data:/app/data:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      - ollama
+
+volumes:
+  ollama_data:

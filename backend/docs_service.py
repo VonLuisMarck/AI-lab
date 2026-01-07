@@ -1,20 +1,20 @@
+
 import json
 import os
 from typing import List, Dict
 from rbac import can_read_classification
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DOCS_INDEX_PATH = os.path.join(BASE_DIR, "data", "docs_index.json")
-DOCS_BASE_DIR = os.path.join(BASE_DIR, "data")
-
+# Dentro del contenedor, este fichero vive en /app/docs_service.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # /app
+DATA_DIR = os.path.join(BASE_DIR, "data")              # /app/data
+DOCS_INDEX_PATH = os.path.join(DATA_DIR, "docs_index.json")
+DOCS_BASE_DIR = DATA_DIR  # para construir rutas tipo data/docs/...
 
 def load_index() -> List[Dict]:
     with open(DOCS_INDEX_PATH, encoding="utf-8") as f:
         return json.load(f)
 
-
 DOCS_INDEX = load_index()
-
 
 def list_docs_for_user(user) -> List[Dict]:
     docs = []
@@ -29,24 +29,25 @@ def list_docs_for_user(user) -> List[Dict]:
             )
     return docs
 
-
 def get_doc_by_id(doc_id: str) -> Dict | None:
     for doc in DOCS_INDEX:
         if doc["id"] == doc_id:
             return doc
     return None
 
-
 def load_doc_content(doc_meta: Dict, max_chars: int = 4000) -> str:
-    path = os.path.join(DOCS_BASE_DIR, doc_meta["path"])
+    path = os.path.join(DOCS_BASE_DIR, doc_meta["path"])  # p.ej. /app/data/docs/public-onboarding.md
     if not os.path.isfile(path):
         return ""
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
     return content[:max_chars]
 
-
 def build_context_for_user(user) -> str:
+    """
+    Devuelve un bloque de texto con snippets de documentos accesibles
+    para el usuario, para inyectar en el prompt del LLM.
+    """
     docs_meta = list_docs_for_user(user)
     if not docs_meta:
         return "No additional documents are accessible for this user."
